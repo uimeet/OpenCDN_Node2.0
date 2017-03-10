@@ -79,31 +79,40 @@ val.conftest = function()
 end
 
 val.tree = function(path, all)
-	local all = all or false
-	local ls = io.popen("ls -l "..path)
-	local files = {}
-	for ele in ls:lines() do
-		local fs = {"privilege", "total", "user", "group", "size", "month", "day", "time", "name"}
-		local count = 1
-		local file = {}
-		for fsele in string.gfind(ele, "%S+") do
-			if(fs[count]) then
-				file[fs[count]] = fsele
-				count = count + 1
-			end
-		end
-		if(string.sub(file.privilege, 0, 1) == "d") then
-			file.type = "dict"
-			if(all and file.name) then
-				file.list = common.tree(path.."/"..file.name, true)
-			end
-		else
-			file.type = "file"
-		end
-		if(file.name) then files[file.name] = file end
-	end
-	return files
+        local all = all or false
+        local ls = io.popen("ls -l "..path)
+        local files = {}
+        local dict = {}
+        for ele in ls:lines() do
+                local fs = {"privilege", "total", "user", "group", "size", "month", "day", "time", "name"}
+                local count = 1
+                local file = {}
+                for fsele in string.gfind(ele, "%S+") do
+                        if(fs[count]) then
+                                file[fs[count]] = fsele
+                                count = count + 1
+                        end
+                end
+                if(string.sub(file.privilege, 0, 1) == "d") then
+                        file.type = "dict"
+                        if(all and file.name) then
+                                --file.list = common.tree(path.."/"..file.name, true)
+                                dict[file.name] = path.."/"..file.name
+                        end
+                else
+                        file.type = "file"
+                end
+                if(file.name) then files[file.name] = file end
+        end
+        ls:close()
+        if (dict) then
+            for key, value in pairs(dict) do
+                files[key].list = val.tree(value, true)
+            end
+        end
+        return files
 end
+
 
 return val;
 	
